@@ -43,6 +43,8 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
 
     private MediaPlayer player;
 
+    private boolean videoLoop;
+
     /**
      * Executes the request and returns PluginResult.
      *
@@ -87,8 +89,11 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
             return true;
         }
         else if (action.equals("close")) {
+            Log.d(LOG_TAG, "Player close is called");
             if (dialog != null) {
+                Log.d(LOG_TAG, "dialog is not null");
                 if(player.isPlaying()) {
+                    Log.d(LOG_TAG, "player is playing - stop it");
                     player.stop();
                 }
                 player.release();
@@ -186,6 +191,13 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
             return;
         }
 
+        try {
+            videoLoop = options.getBoolean("loop");
+        } catch (Exception e) {
+            Log.w(LOG_TAG, "Error getting Loop-Option - setting it to false");
+            videoLoop = false;
+        }
+
         if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
             try {
                 int scalingMode = options.getInt("scalingMode");
@@ -215,6 +227,10 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
                 player.setDisplay(holder);
                 try {
                     player.prepare();
+                    if(videoLoop){
+                        player.setLooping(true);
+                    }
+                    Log.d(LOG_TAG, "Is Media Player Looping? " + player.isLooping() );
                 } catch (Exception e) {
                     PluginResult result = new PluginResult(PluginResult.Status.ERROR, e.getLocalizedMessage());
                     result.setKeepCallback(false); // release status callback in JS side
@@ -259,8 +275,15 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
     @Override
     public void onCompletion(MediaPlayer mp) {
         Log.d(LOG_TAG, "MediaPlayer completed");
-        mp.release();
-        dialog.dismiss();
+        if(!videoLoop){
+            mp.release();
+            dialog.dismiss();
+        }
+        else{
+            mp.pause();
+            mp.seekTo(0);
+            mp.start();
+        }
     }
 
     @Override
