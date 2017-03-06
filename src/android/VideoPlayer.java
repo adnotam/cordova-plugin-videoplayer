@@ -2,9 +2,13 @@ package com.moust.cordova.videoplayer;
 
 import android.annotation.TargetApi;
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnDismissListener;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.AssetFileDescriptor;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
@@ -45,12 +49,13 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
 
     private boolean videoLoop;
 
+    BroadcastReceiver receiver;
+
     /**
      * Executes the request and returns PluginResult.
      *
      * @param action        The action to execute.
      * @param args          JSONArray of arguments for the plugin.
-     * @param callbackId    The callback id used when calling back into JavaScript.
      * @return              A PluginResult object with a status and message.
      */
     public boolean execute(String action, CordovaArgs args, CallbackContext callbackContext) throws JSONException {
@@ -80,6 +85,30 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
                 }
             });
 
+            // Register Broadcast Receiver
+            IntentFilter intentFilter = new IntentFilter();
+            intentFilter.addAction("android.bluetooth.adapter.action.DISCOVERY_STARTED");
+
+            if (this.receiver == null) {
+                final CallbackContext callbackContextFinal = callbackContext;
+                this.receiver = new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        Log.d(LOG_TAG, "Stop video, because we receiver BT Signal");
+                        stopVideo();
+
+                        if (callbackContextFinal != null) {
+                            PluginResult result = new PluginResult(PluginResult.Status.OK);
+                            result.setKeepCallback(false); // release status callback in JS side
+                            callbackContextFinal.sendPluginResult(result);
+
+                        }
+
+                    }
+                };
+                webView.getContext().registerReceiver(this.receiver, intentFilter);
+            }
+
             // Don't return any result now
             PluginResult pluginResult = new PluginResult(PluginResult.Status.NO_RESULT);
             pluginResult.setKeepCallback(true);
@@ -89,16 +118,7 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
             return true;
         }
         else if (action.equals("close")) {
-            Log.d(LOG_TAG, "Player close is called");
-            if (dialog != null) {
-                Log.d(LOG_TAG, "dialog is not null");
-                if(player.isPlaying()) {
-                    Log.d(LOG_TAG, "player is playing - stop it");
-                    player.stop();
-                }
-                player.release();
-                dialog.dismiss();
-            }
+            stopVideo();
 
             if (callbackContext != null) {
                 PluginResult result = new PluginResult(PluginResult.Status.OK);
@@ -124,6 +144,19 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
             return Uri.parse(uriString).getPath();
         }
         return uriString;
+    }
+
+    private void stopVideo(){
+        Log.d(LOG_TAG, "Player close is called");
+        if (dialog != null) {
+            Log.d(LOG_TAG, "dialog is not null");
+            if(player.isPlaying()) {
+                Log.d(LOG_TAG, "player is playing - stop it");
+                player.stop();
+            }
+            player.release();
+            dialog.dismiss();
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
