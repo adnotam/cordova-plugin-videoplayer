@@ -22,10 +22,6 @@ module.exports = {
         exec(successCallback, errorCallback, "VideoPlayer", "close", []);
     },
 
-    registerInterruptReceiver: function(interruptCallback, errorCallback) {
-        exec(successCallback, errorCallback, "VideoPlayer", "registerInterruptReceiver", []);
-    },
-
     merge: function () {
         var obj = {};
         Array.prototype.slice.call(arguments).forEach(function(source) {
