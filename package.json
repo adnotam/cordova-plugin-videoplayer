@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "description": "A Cordova plugin that simply allows you to immediately play a video in fullscreen mode.",
   "cordova": {
-    "id": "cordova-plugin-video-player",
+    "id": "cordova-plugin-adnotam-video-player",
     "platforms": [
       "android",
       "ios"
@@ -16,12 +16,9 @@
       }
     }
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/adnotam/cordova-plugin-videoplayer.git"
+    "url": "git+https://github.com/adnotam/cordova-plugin-video-player.git"
   },
   "keywords": [
     "ecosystem:cordova",
@@ -33,5 +30,5 @@
   ],
   "author": "Quentin Aupetit",
   "license": "MIT",
-  "homepage": "https://github.com/adnotam/cordova-plugin-videoplayer#readme"
+  "homepage": "https://github.com/adnotam/cordova-plugin-video-player#readme"
 }
